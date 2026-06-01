@@ -204,36 +204,48 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
       </section>
 
       {/* SECTION 3: TIMELINE */}
-      <section className="py-28 bg-white/40 backdrop-blur-sm px-6 relative z-10">
-        <div className="max-w-4xl mx-auto">
+     <section className="py-28 bg-white/40 backdrop-blur-sm px-6 relative z-10">
+        <div className="max-w-5xl mx-auto">
           <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-4xl md:text-5xl font-bold text-center text-rose-600 mb-20 font-title">
             ⏳ Hành Trình Yêu Thương
           </motion.h2>
 
           <div className="relative">
-            <motion.div style={{ scaleY: scrollYProgress, originY: 0 }} className="absolute left-4 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-rose-300 to-pink-500 -translate-x-1/2 z-10 rounded-full" />
+            {/* ĐƯỜNG KẺ DỌC CHẠY THEO SCROLL */}
+            <motion.div style={{ scaleY: scrollYProgress, originY: 0 }} className="absolute left-5 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-rose-300 to-pink-500 md:-translate-x-1/2 z-10 rounded-full" />
             
             {timeline.map((item, index) => {
               const isEven = index % 2 === 0;
               return (
-                <div key={index} className="mb-16 flex items-center justify-start md:justify-center w-full relative z-20">
-                  <div className={`flex items-center w-full md:w-1/2 ${isEven ? 'md:justify-end md:pr-12' : 'md:justify-start md:pl-12'} pl-12 md:pl-0`}>
-                    <motion.div
-                      initial={{ opacity: 0, x: isEven ? 100 : -100, scale: 0.5 }}
-                      whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                      viewport={{ once: true, margin: "-100px" }}
-                      transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
-                      whileHover={{ scale: 1.05, rotate: isEven ? -2 : 2 }}
-                      className="bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-rose-100 w-full max-w-sm"
-                    >
-                      <span className="inline-block px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-sm font-bold mb-3">{item.date}</span>
-                      <h3 className="text-2xl font-semibold text-gray-800 flex items-center gap-2 mb-2">{item.title} <span>{item.icon}</span></h3>
-                      <p className="text-gray-600 font-light">{item.desc}</p>
-                    </motion.div>
-                  </div>
-                  <motion.div initial={{ scale: 0, rotate: -180 }} whileInView={{ scale: 1, rotate: 0 }} viewport={{ once: true }} transition={{ type: "spring", duration: 1 }} className="absolute left-4 md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border-4 border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] z-30 flex items-center justify-center">
+                <div key={index} className={`mb-12 md:mb-20 flex justify-between items-center w-full relative z-20 ${isEven ? 'md:flex-row-reverse' : ''}`}>
+                  
+                  {/* DẤU CHẤM MỐC THỜI GIAN */}
+                  <motion.div 
+                    initial={{ scale: 0, rotate: -180 }} whileInView={{ scale: 1, rotate: 0 }} viewport={{ once: true }} transition={{ type: "spring", duration: 1 }} 
+                    className="absolute left-5 md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border-4 border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] z-30 flex items-center justify-center"
+                  >
                     <div className="w-3 h-3 bg-rose-500 rounded-full animate-ping" />
                   </motion.div>
+
+                  {/* KHÔNG GIAN BÙ TRỪ GIÚP ĐẨY KHUNG TEXT SANG 2 BÊN TRÊN DESKTOP */}
+                  <div className="hidden md:block w-5/12"></div>
+
+                  {/* THẺ NỘI DUNG (Tránh xa dấu chấm) */}
+                  <div className="w-full pl-16 md:pl-0 md:w-5/12">
+                    <motion.div
+                      initial={{ opacity: 0, x: isEven ? -50 : 50, scale: 0.9 }}
+                      whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
+                      whileHover={{ scale: 1.05, rotate: isEven ? -2 : 2 }}
+                      className="bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-rose-100 w-full hover:shadow-rose-200/50 transition-all"
+                    >
+                      <span className="inline-block px-4 py-1.5 bg-rose-100 text-rose-600 rounded-full text-sm font-bold mb-4">{item.date}</span>
+                      <h3 className="text-2xl font-semibold text-gray-800 flex items-center gap-2 mb-2">{item.title} <span>{item.icon}</span></h3>
+                      <p className="text-gray-600 font-light leading-relaxed">{item.desc}</p>
+                    </motion.div>
+                  </div>
+                  
                 </div>
               );
             })}
