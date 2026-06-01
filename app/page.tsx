@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion, useScroll, useTransform, useSpring } from "framer-motion";
 
@@ -20,6 +20,16 @@ export default function BirthdaySurprise() {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const startMusic = useCallback(async () => {
+    if (!audioRef.current || !audioRef.current.paused) return;
+    try {
+      await audioRef.current.play();
+      setIsPlaying(true);
+    } catch {
+      // Browsers may block autoplay until a user interaction occurs.
+    }
+  }, []);
+
   // Scroll Progress
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
@@ -29,7 +39,7 @@ export default function BirthdaySurprise() {
   useEffect(() => {
     const updateViewport = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
     const updateMousePosition = (e: MouseEvent) => setMousePosition({ x: e.clientX, y: e.clientY });
-    
+
     updateViewport();
     window.addEventListener("resize", updateViewport);
     window.addEventListener("mousemove", updateMousePosition);
@@ -38,21 +48,32 @@ export default function BirthdaySurprise() {
     audioRef.current = new Audio("/George_Micheal_-_Careless_Whisper_(mp3.pm).mp3"); // Cần có file music.mp3 trong thư mục public
     audioRef.current.loop = true;
 
+    void startMusic();
+
+    const handleFirstInteraction = () => {
+      void startMusic();
+    };
+
+    window.addEventListener("pointerdown", handleFirstInteraction, { once: true });
+    window.addEventListener("keydown", handleFirstInteraction, { once: true });
+
     return () => {
       clearTimeout(timeout);
       window.removeEventListener("resize", updateViewport);
       window.removeEventListener("mousemove", updateMousePosition);
+      window.removeEventListener("pointerdown", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
       if (audioRef.current) audioRef.current.pause();
     };
-  }, []);
+  }, [startMusic]);
 
-  const toggleMusic = () => {
+  const toggleMusic = async () => {
     if (isPlaying) {
       audioRef.current?.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current?.play();
+      await startMusic();
     }
-    setIsPlaying(!isPlaying);
   };
 
   const scrollToSection = (id: string) => {
@@ -61,19 +82,19 @@ export default function BirthdaySurprise() {
   };
 
   // Hiệu ứng xuất hiện từng từ cho tiêu đề
-const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
-  
+  const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
+
   const titleVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
   };
-  
+
   const wordVariants = {
     hidden: { opacity: 0, y: 50, rotateX: -90 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      rotateX: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
+      rotateX: 0,
       transition: { duration: 0.8, type: "spring" as const, bounce: 0.4 } // <--- Thêm "as const" vào đây
     }
   };
@@ -92,12 +113,12 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
 
   return (
     <div className="min-h-screen bg-[#fff5f6] text-gray-800 font-sans selection:bg-rose-200 relative overflow-hidden cursor-none md:cursor-auto">
-      
+
       {/* THANH SCROLL PROGRESS */}
       <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400 origin-left z-[100]" style={{ scaleX }} />
 
       {/* CUSTOM CURSOR (Chỉ hiện trên màn hình lớn) */}
-      <motion.div 
+      <motion.div
         animate={{ x: mousePosition.x - 16, y: mousePosition.y - 16 }}
         transition={{ type: "tween", ease: "backOut", duration: 0.15 }}
         className="hidden md:block fixed top-0 left-0 w-8 h-8 rounded-full border-2 border-rose-500 pointer-events-none z-[100] mix-blend-multiply backdrop-blur-sm bg-rose-200/20"
@@ -143,9 +164,9 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
           <motion.span animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2, repeatDelay: 1 }} className="text-7xl mb-8 block drop-shadow-xl">
             🎂
           </motion.span>
-          
+
           {/* HIỆU ỨNG CHỮ STAGGER */}
-          <motion.h1 
+          <motion.h1
             variants={titleVariants} initial="hidden" animate="visible"
             className="text-5xl md:text-7xl font-bold mb-6 font-title tracking-wide flex flex-wrap justify-center gap-x-4"
           >
@@ -155,22 +176,22 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
               </motion.span>
             ))}
           </motion.h1>
-          
+
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="text-gray-700 text-xl mb-10 leading-relaxed font-light">
             Hôm nay là một ngày đặc biệt, ngày mà thế giới này chào đón một thiên thần dễ thương nhất.
           </motion.p>
-          
+
           <motion.button
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 0.5 }}
             whileHover={{ scale: 1.05, boxShadow: "0 10px 25px rgba(244,63,94,0.4)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
-  scrollToSection("memories");
-  // Nếu nhạc chưa bật thì tự động bật luôn
-  if (!isPlaying) {
-    toggleMusic();
-  }
-}}
+              scrollToSection("memories");
+              // Nếu nhạc chưa bật thì tự động bật luôn
+              if (!isPlaying) {
+                toggleMusic();
+              }
+            }}
             className="relative overflow-hidden group bg-gradient-to-r from-rose-500 to-pink-500 text-white px-10 py-4 rounded-full font-semibold shadow-lg text-lg transition-all"
           >
             <span className="relative z-10">Khám phá món quà 🎁</span>
@@ -178,7 +199,7 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
             <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
           </motion.button>
         </motion.div>
-        
+
         <motion.div animate={{ y: [0, 15, 0] }} transition={{ repeat: Infinity, duration: 1.5 }} onClick={() => scrollToSection("memories")} className="absolute bottom-10 text-rose-400 text-4xl cursor-pointer hover:text-rose-600 transition-colors">
           👇
         </motion.div>
@@ -210,7 +231,7 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
       </section>
 
       {/* SECTION 3: TIMELINE */}
-     <section className="py-28 bg-white/40 backdrop-blur-sm px-6 relative z-10">
+      <section className="py-28 bg-white/40 backdrop-blur-sm px-6 relative z-10">
         <div className="max-w-5xl mx-auto">
           <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-4xl md:text-5xl font-bold text-center text-rose-600 mb-20 font-title">
             ⏳ Hành Trình Yêu Thương
@@ -219,15 +240,15 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
           <div className="relative">
             {/* ĐƯỜNG KẺ DỌC CHẠY THEO SCROLL */}
             <motion.div style={{ scaleY: scrollYProgress, originY: 0 }} className="absolute left-5 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-rose-300 to-pink-500 md:-translate-x-1/2 z-10 rounded-full" />
-            
+
             {timeline.map((item, index) => {
               const isEven = index % 2 === 0;
               return (
                 <div key={index} className={`mb-12 md:mb-20 flex justify-between items-center w-full relative z-20 ${isEven ? 'md:flex-row-reverse' : ''}`}>
-                  
+
                   {/* DẤU CHẤM MỐC THỜI GIAN */}
-                  <motion.div 
-                    initial={{ scale: 0, rotate: -180 }} whileInView={{ scale: 1, rotate: 0 }} viewport={{ once: true }} transition={{ type: "spring", duration: 1 }} 
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }} whileInView={{ scale: 1, rotate: 0 }} viewport={{ once: true }} transition={{ type: "spring", duration: 1 }}
                     className="absolute left-5 md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border-4 border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] z-30 flex items-center justify-center"
                   >
                     <div className="w-3 h-3 bg-rose-500 rounded-full animate-ping" />
@@ -251,7 +272,7 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
                       <p className="text-gray-600 font-light leading-relaxed">{item.desc}</p>
                     </motion.div>
                   </div>
-                  
+
                 </div>
               );
             })}
@@ -263,26 +284,26 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
       <section className="py-32 text-center px-6 relative z-10">
         {/* Floating background hearts */}
         {[...Array(5)].map((_, i) => (
-            <motion.div key={i} animate={{ y: [0, -200], opacity: [0, 1, 0], scale: [0.5, 1.5, 0.5] }} transition={{ repeat: Infinity, duration: 3 + i, delay: i * 0.5 }} className="absolute text-rose-300 text-2xl" style={{ left: `${20 + i * 15}%`, bottom: "0" }}>
-                💖
-            </motion.div>
+          <motion.div key={i} animate={{ y: [0, -200], opacity: [0, 1, 0], scale: [0.5, 1.5, 0.5] }} transition={{ repeat: Infinity, duration: 3 + i, delay: i * 0.5 }} className="absolute text-rose-300 text-2xl" style={{ left: `${20 + i * 15}%`, bottom: "0" }}>
+            💖
+          </motion.div>
         ))}
 
         <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} className="max-w-xl mx-auto relative z-20">
-            <h2 className="text-3xl md:text-4xl font-semibold text-gray-800 mb-10 leading-tight">Và cuối cùng... <br/> Điều quan trọng nhất anh muốn nói</h2>
-            <motion.button
-                whileHover={{ scale: 1.1, rotate: [0, -5, 5, -5, 0] }} whileTap={{ scale: 0.9 }} onClick={() => setIsOpenLetter(true)}
-                className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-[length:200%_auto] animate-[gradient_3s_linear_infinite] text-white font-bold px-12 py-5 rounded-full shadow-[0_10px_40px_rgba(244,63,94,0.5)] text-xl transition-all"
-            >
-                Mở thư tay bí mật ✉️
-            </motion.button>
+          <h2 className="text-3xl md:text-4xl font-semibold text-gray-800 mb-10 leading-tight">Và cuối cùng... <br /> Điều quan trọng nhất anh muốn nói</h2>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: [0, -5, 5, -5, 0] }} whileTap={{ scale: 0.9 }} onClick={() => setIsOpenLetter(true)}
+            className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-[length:200%_auto] animate-[gradient_3s_linear_infinite] text-white font-bold px-12 py-5 rounded-full shadow-[0_10px_40px_rgba(244,63,94,0.5)] text-xl transition-all"
+          >
+            Mở thư tay bí mật ✉️
+          </motion.button>
         </motion.div>
       </section>
 
       {/* SECTION 5: MODAL THƯ TAY (Hiệu ứng đập nhịp tim) */}
       <AnimatePresence>
         {isOpenLetter && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 z-[200] flex items-center justify-center p-4 backdrop-blur-md"
             onClick={() => setIsOpenLetter(false)}
@@ -316,7 +337,8 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
       </AnimatePresence>
 
       {/* Tailwind Animations (Thêm vào tailwind.config.ts nếu cần mượt hơn) */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes shimmer { 100% { transform: translateX(100%); } }
         @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
       `}} />
