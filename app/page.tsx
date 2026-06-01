@@ -164,7 +164,13 @@ const titleText = "Happy Birthday, Em Yêu! ❤️".split(" ");
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 0.5 }}
             whileHover={{ scale: 1.05, boxShadow: "0 10px 25px rgba(244,63,94,0.4)" }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => scrollToSection("memories")}
+            onClick={() => {
+  scrollToSection("memories");
+  // Nếu nhạc chưa bật thì tự động bật luôn
+  if (!isPlaying) {
+    toggleMusic();
+  }
+}}
             className="relative overflow-hidden group bg-gradient-to-r from-rose-500 to-pink-500 text-white px-10 py-4 rounded-full font-semibold shadow-lg text-lg transition-all"
           >
             <span className="relative z-10">Khám phá món quà 🎁</span>
