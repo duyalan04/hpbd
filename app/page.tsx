@@ -21,12 +21,14 @@ export default function BirthdaySurprise() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const startMusic = useCallback(async () => {
-    if (!audioRef.current || !audioRef.current.paused) return;
+    if (!audioRef.current || !audioRef.current.paused) return true;
     try {
       await audioRef.current.play();
       setIsPlaying(true);
+      return true;
     } catch {
       // Browsers may block autoplay until a user interaction occurs.
+      return false;
     }
   }, []);
 
@@ -47,15 +49,36 @@ export default function BirthdaySurprise() {
     const timeout = setTimeout(() => setShowConfetti(false), 12000);
     audioRef.current = new Audio("/George_Micheal_-_Careless_Whisper_(mp3.pm).mp3"); // Cần có file music.mp3 trong thư mục public
     audioRef.current.loop = true;
+    audioRef.current.preload = "auto";
 
-    void startMusic();
-
-    const handleFirstInteraction = () => {
-      void startMusic();
+    const syncPlayingState = () => {
+      setIsPlaying(!!audioRef.current && !audioRef.current.paused);
     };
 
-    window.addEventListener("pointerdown", handleFirstInteraction, { once: true });
-    window.addEventListener("keydown", handleFirstInteraction, { once: true });
+    audioRef.current.addEventListener("play", syncPlayingState);
+    audioRef.current.addEventListener("pause", syncPlayingState);
+
+    const attemptAutoStart = () => {
+      if (!audioRef.current || !audioRef.current.paused) return;
+      void audioRef.current.play().catch(() => {
+        // Autoplay can be blocked; first interaction will retry.
+      });
+    };
+
+    attemptAutoStart();
+
+    const handleFirstInteraction = async () => {
+      const started = await startMusic();
+      if (started) {
+        window.removeEventListener("pointerdown", handleFirstInteraction);
+        window.removeEventListener("keydown", handleFirstInteraction);
+        audioRef.current?.removeEventListener("canplaythrough", handleFirstInteraction);
+      }
+    };
+
+    window.addEventListener("pointerdown", handleFirstInteraction);
+    window.addEventListener("keydown", handleFirstInteraction);
+    audioRef.current.addEventListener("canplaythrough", handleFirstInteraction);
 
     return () => {
       clearTimeout(timeout);
@@ -63,6 +86,9 @@ export default function BirthdaySurprise() {
       window.removeEventListener("mousemove", updateMousePosition);
       window.removeEventListener("pointerdown", handleFirstInteraction);
       window.removeEventListener("keydown", handleFirstInteraction);
+      audioRef.current?.removeEventListener("play", syncPlayingState);
+      audioRef.current?.removeEventListener("pause", syncPlayingState);
+      audioRef.current?.removeEventListener("canplaythrough", handleFirstInteraction);
       if (audioRef.current) audioRef.current.pause();
     };
   }, [startMusic]);
@@ -72,7 +98,8 @@ export default function BirthdaySurprise() {
       audioRef.current?.pause();
       setIsPlaying(false);
     } else {
-      await startMusic();
+      const started = await startMusic();
+      if (!started) setIsPlaying(false);
     }
   };
 
