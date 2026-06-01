@@ -1,15 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 
 const Confetti = dynamic(() => import("react-confetti"), { ssr: false });
+
+// Component trang trí ngôi sao lấp lánh nhỏ
+const SparkleIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+    <path d="M12 2L14.5 9.5H22L16 14L18.5 21.5L12 17L5.5 21.5L8 14L2 9.5H9.5L12 2Z" fill="currentColor" />
+  </svg>
+);
 
 export default function BirthdaySurprise() {
   const [showConfetti, setShowConfetti] = useState(true);
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [isOpenLetter, setIsOpenLetter] = useState(false);
+  const containerRef = useRef(null);
+
+  // Hiệu ứng Parallax cho nền
+  const { scrollYProgress } = useScroll();
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const opacityHero = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
 
   useEffect(() => {
     const updateViewport = () => {
@@ -19,8 +32,8 @@ export default function BirthdaySurprise() {
     updateViewport();
     window.addEventListener("resize", updateViewport);
 
-    // Keep confetti visible for 8 seconds.
-    const timeout = setTimeout(() => setShowConfetti(false), 8000);
+    // Tắt pháo giấy sau 10 giây
+    const timeout = setTimeout(() => setShowConfetti(false), 10000);
 
     return () => {
       clearTimeout(timeout);
@@ -36,176 +49,261 @@ export default function BirthdaySurprise() {
   };
 
   const timeline = [
-    {
-      date: "26/06/2024",
-      title: "Trú mưa cùng nhau",
-      desc: "Cơn mưa hôm ấy làm hai đứa mình gần nhau hơn.",
-    },
-    {
-      date: "30/05/2025",
-      title: "Chính thức yêu nhau",
-      desc: "Khoảnh khắc em gật đầu là điều ngọt ngào nhất với anh.",
-    },
-    {
-      date: "30/06/2026",
-      title: "Kỉ niệm 2 năm yêu nhau",
-      desc: "Hai năm bên nhau, càng ngày anh càng thương em nhiều hơn.",
-    },
+    { date: "26/06/2024", title: "Trú mưa cùng nhau", desc: "Cơn mưa hôm ấy làm hai đứa mình gần nhau hơn.", icon: "☔" },
+    { date: "30/05/2025", title: "Chính thức yêu nhau", desc: "Khoảnh khắc em gật đầu là điều ngọt ngào nhất.", icon: "💖" },
+    { date: "30/06/2026", title: "Kỉ niệm 2 năm yêu", desc: "Càng ngày anh càng thương em nhiều hơn.", icon: "💑" },
   ];
 
   const photos = [
-    {
-      url: "z7890081776442_dd7205e09121bda20a7074bd9476c823.jpg",
-      caption: "Nụ cười làm tim anh tan chảy",
-    },
-    {
-      url: "z7890082708692_fa8698add0b6d33dc9101999e56fc127.jpg",
-      caption: "Lúc nào cũng tinh nghịch như thế này nhé",
-    },
-    {
-      url: "z7890083049499_639af1f56654cfa18585ecf2078fd327.jpg",
-      caption: "Công chúa nhỏ của anh",
-    },
+    { url: "z7890081776442_dd7205e09121bda20a7074bd9476c823.jpg", caption: "Nụ cười làm tim anh tan chảy" },
+    { url: "z7890082708692_fa8698add0b6d33dc9101999e56fc127.jpg", caption: "Lúc nào cũng tinh nghịch nhé" },
+    { url: "z7890083049499_639af1f56654cfa18585ecf2078fd327.jpg", caption: "Công chúa nhỏ của anh" },
   ];
 
   return (
-    <div className="min-h-screen bg-rose-50 text-gray-800 font-sans selection:bg-rose-200">
+    <div ref={containerRef} className="min-h-screen bg-[#fff5f6] text-gray-800 font-sans selection:bg-rose-100 relative overflow-hidden">
+      
+      {/* NỀN PARALLAX ĐỘNG */}
+      <motion.div 
+        style={{ y: backgroundY }}
+        className="fixed inset-0 z-0 opacity-30"
+      >
+        <div className="absolute top-10 left-1/4 text-rose-200 text-6xl animate-float">❤️</div>
+        <div className="absolute top-1/3 right-10 text-rose-100 text-9xl animate-float [animation-delay:2s]">💖</div>
+        <div className="absolute bottom-1/4 left-10 text-rose-200 text-8xl animate-float [animation-delay:4s]">💗</div>
+        <SparkleIcon className="absolute top-1/2 left-1/2 w-10 h-10 text-yellow-300 animate-sparkle" />
+        <SparkleIcon className="absolute top-20 right-1/4 w-6 h-6 text-yellow-200 animate-sparkle [animation-delay:1s]" />
+      </motion.div>
+
       {showConfetti && (
-        <Confetti width={viewport.width} height={viewport.height} />
+        <Confetti width={viewport.width} height={viewport.height} numberOfPieces={200} recycle={false} colors={['#f43f5e', '#fecdd3', '#fff', '#fb923c']} />
       )}
 
-      <section className="h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+      {/* SECTION 1: HERO (TỐI ƯU HIỆU ỨNG) */}
+      <section className="h-screen flex flex-col items-center justify-center p-6 text-center relative z-10 overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
-          className="bg-white/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl max-w-xl border border-rose-100 z-10"
+          style={{ opacity: opacityHero }}
+          initial={{ opacity: 0, y: 100, rotateX: 30 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{ duration: 1.2, type: "spring", bounce: 0.3 }}
+          className="bg-white/70 backdrop-blur-lg p-10 md:p-16 rounded-[40px] shadow-[0_20px_50px_rgba(244,63,94,0.15)] max-w-2xl border border-rose-100/50"
         >
-          <span className="text-6xl mb-4 block animate-bounce">🎂</span>
-          <h1 className="text-4xl md:text-5xl font-bold text-rose-500 mb-4 tracking-wide">
+          <motion.span 
+            animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+            transition={{ repeat: Infinity, duration: 2, repeatDelay: 1 }}
+            className="text-7xl mb-6 block"
+          >
+            🎂
+          </motion.span>
+          
+          <h1 className="text-5xl md:text-7xl font-bold text-rose-600 mb-6 font-title tracking-wide bg-gradient-to-r from-rose-600 to-pink-500 bg-clip-text text-transparent">
             Happy Birthday, Em Yêu! ❤️
           </h1>
-          <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+          
+          <p className="text-gray-700 text-xl mb-10 leading-relaxed font-light">
             Hôm nay là một ngày đặc biệt, ngày mà thế giới này chào đón một
             thiên thần dễ thương nhất. Anh có một bất ngờ nhỏ dành tặng riêng
             cho em...
           </p>
+          
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, boxShadow: "0 10px 25px rgba(244,63,94,0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => scrollToSection("memories")}
-            className="bg-rose-500 text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:bg-rose-600 transition-colors"
+            className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-10 py-4 rounded-full font-semibold shadow-lg text-lg transition-all"
           >
             Khám phá món quà 🎁
           </motion.button>
         </motion.div>
-
-        <div className="absolute top-10 left-10 text-rose-200 text-4xl opacity-50 animate-pulse">
-          ❤️
-        </div>
-        <div className="absolute bottom-10 right-10 text-rose-200 text-6xl opacity-50 animate-pulse">
-          💖
-        </div>
+        
+        <motion.div 
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 text-rose-300 text-3xl cursor-pointer"
+            onClick={() => scrollToSection("memories")}
+        >
+            ↓
+        </motion.div>
       </section>
 
-      <section id="memories" className="py-20 px-6 max-w-5xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-rose-600 mb-12">
+      {/* SECTION 2: GALLERY (HIỆU ỨNG HOVER HOÀN TOÀN MỚI) */}
+      <section id="memories" className="py-24 px-6 max-w-6xl mx-auto relative z-10">
+        <motion.h2 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          className="text-4xl md:text-5xl font-bold text-center text-rose-600 mb-16 font-title"
+        >
           📸 Khoảnh Khắc Của Chúng Mình
-        </h2>
+        </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {photos.map((photo, index) => (
             <motion.div
               key={photo.url}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -10 }}
-              className="bg-white rounded-2xl overflow-hidden shadow-md border border-rose-100 group"
+              transition={{ delay: index * 0.2, duration: 0.6 }}
+              viewport={{ once: true, margin: "-100px" }}
+              className="bg-white rounded-3xl overflow-hidden shadow-xl border border-rose-100 group relative aspect-[3/4]"
             >
-              <div className="h-64 overflow-hidden relative">
-                <img
-                  src={photo.url}
-                  alt={photo.caption}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-4 text-center">
-                <p className="font-medium text-gray-700 italic">
-                  &quot;{photo.caption}&quot;
-                </p>
-              </div>
+              <img
+                src={photo.url}
+                alt={photo.caption}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              
+              {/* Lớp phủ mờ và Caption xuất hiện khi hover */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              >
+                <div className="overflow-hidden">
+                    <motion.p 
+                        initial={{ y: 50 }}
+                        whileHover={{ y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="font-title text-3xl text-white italic"
+                    >
+                        &quot;{photo.caption}&quot;
+                    </motion.p>
+                </div>
+              </motion.div>
+              
+              {/* Hiệu ứng lấp lánh (Glare) khi hover */}
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 transform -translate-x-full group-hover:translate-x-full rotate-12" />
             </motion.div>
           ))}
         </div>
       </section>
 
-      <section className="py-20 bg-white/60 backdrop-blur-sm px-6">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-rose-600 mb-16">
+      {/* SECTION 3: TIMELINE (ĐƯỜNG CHẠY ĐỘNG) */}
+      <section className="py-28 bg-white/40 backdrop-blur-sm px-6 relative z-10">
+        <div className="max-w-4xl mx-auto overflow-hidden">
+          <motion.h2 
+             initial={{ opacity: 0, y: 30 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-bold text-center text-rose-600 mb-20 font-title"
+          >
             ⏳ Hành Trình Yêu Thương
-          </h2>
+          </motion.h2>
 
-          <div className="relative border-l-2 border-rose-300 ml-4 md:ml-32">
-            {timeline.map((item, index) => (
-              <motion.div
-                key={`${item.date}-${item.title}`}
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="mb-10 ml-6 relative"
-              >
-                <span className="absolute -left-[31px] top-1 bg-rose-400 w-4 h-4 rounded-full border-4 border-white shadow shadow-rose-300"></span>
-                <span className="text-sm font-bold text-rose-400 block mb-1">
-                  {item.date}
-                </span>
-                <h3 className="text-xl font-semibold text-gray-800">
-                  {item.title}
-                </h3>
-                <p className="text-gray-600 mt-1">{item.desc}</p>
-              </motion.div>
-            ))}
+          <div className="relative">
+            {/* ĐƯỜNG KẺ NỀN MỜ */}
+            <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-rose-100 -translate-x-1/2" />
+            
+            {/* ĐƯỜNG KẺ CHẠY THEO KHI SCROLL */}
+            <motion.div 
+                style={{ scaleY: scrollYProgress, originY: 0 }}
+                className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-rose-400 -translate-x-1/2 z-10"
+            />
+
+            {timeline.map((item, index) => {
+              const isEven = index % 2 === 0;
+              return (
+                <div key={`${item.date}-${item.title}`} className="mb-16 flex items-center justify-start md:justify-center w-full relative z-20">
+                  
+                  {/* Nội dung (trái hoặc phải tùy chỉ số) */}
+                  <div className={`flex items-center w-full md:w-1/2 ${isEven ? 'md:justify-end md:pr-12' : 'md:justify-start md:pl-12'} pl-12 md:pl-0`}>
+                    <motion.div
+                      initial={{ opacity: 0, x: isEven ? 50 : -50 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, margin: "-100px" }}
+                      transition={{ duration: 0.7, type: "spring" }}
+                      className="bg-white p-6 rounded-2xl shadow-lg border border-rose-100 w-full max-w-sm hover:shadow-rose-100 hover:shadow-2xl transition-shadow"
+                    >
+                      <span className="text-sm font-bold text-rose-400 block mb-1">
+                        {item.date}
+                      </span>
+                      <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        {item.title} <span className="text-lg">{item.icon}</span>
+                      </h3>
+                      <p className="text-gray-600 mt-2 font-light">{item.desc}</p>
+                    </motion.div>
+                  </div>
+
+                  {/* Điểm tròn trên timeline */}
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    className="absolute left-4 md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white border-4 border-rose-400 shadow-xl flex items-center justify-center z-30"
+                  >
+                     <div className="w-3 h-3 rounded-full bg-rose-400 animate-pulse" />
+                  </motion.div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="py-20 text-center px-6">
-        <h2 className="text-2xl font-medium text-gray-700 mb-6">
-          Và cuối cùng... Điều quan trọng nhất anh muốn nói
-        </h2>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsOpenLetter(true)}
-          className="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold px-10 py-4 rounded-full shadow-xl text-lg animate-pulse"
+      {/* SECTION 4: CALL TO ACTION (LỚN HƠN) */}
+      <section className="py-32 text-center px-6 relative z-10">
+        <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            className="max-w-xl mx-auto"
         >
-          Mở thư tay bí mật ✉️
-        </motion.button>
+            <h2 className="text-3xl md:text-4xl font-semibold text-gray-800 mb-10 leading-tight">
+                Và cuối cùng... <br/> Điều quan trọng nhất anh muốn nói
+            </h2>
+            <motion.button
+                whileHover={{ scale: 1.1, rotate: [0, -3, 3, 0] }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsOpenLetter(true)}
+                className="bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white font-bold px-12 py-5 rounded-full shadow-2xl text-xl animate-pulse transition-all"
+            >
+                Mở thư tay bí mật ✉️
+            </motion.button>
+        </motion.div>
       </section>
 
+      {/* SECTION 5: POPUP BỨC THƯ (HIỆU ỨNG 3D FLIP) */}
       <AnimatePresence>
         {isOpenLetter && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-md [perspective:1000px]"
+            onClick={() => setIsOpenLetter(false)} // Đóng khi nhấn ra ngoài
+          >
             <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
-              className="bg-[#fcf8f2] text-[#4a3b32] p-8 md:p-12 rounded-2xl max-w-xl w-full shadow-2xl border-2 border-[#e6dcd3] relative"
+              initial={{ scale: 0.6, opacity: 0, rotateY: 70 }}
+              animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+              exit={{ scale: 0.6, opacity: 0, rotateY: -70 }}
+              transition={{ duration: 0.8, type: "spring", bounce: 0.2 }}
+              className="bg-[#fcf8f2] text-[#4a3b32] p-8 md:p-14 rounded-3xl max-w-2xl w-full shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-2 border-[#e6dcd3] relative font-serif overflow-hidden"
+              onClick={(e) => e.stopPropagation()} // Ngăn đóng khi nhấn vào trong thư
             >
+              {/* Trang trí góc thư cũ */}
+              <div className="absolute -top-10 -left-10 w-24 h-24 bg-rose-100 rounded-full opacity-50" />
+              <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-rose-100 rounded-full opacity-50" />
+
               <button
                 onClick={() => setIsOpenLetter(false)}
-                className="absolute top-4 right-4 text-2xl hover:text-rose-500 transition-colors"
+                className="absolute top-5 right-5 text-3xl text-gray-400 hover:text-rose-500 transition-colors z-10"
               >
                 ✕
               </button>
 
-              <h3 className="text-2xl font-bold text-center text-rose-600 mb-6 border-b pb-4 border-rose-200">
+              <motion.h3 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-4xl font-bold text-center text-rose-600 mb-10 border-b-2 pb-6 border-rose-100 font-title tracking-wide"
+              >
                 Gửi cục cưng của anh,
-              </h3>
+              </motion.h3>
 
-              <div className="space-y-4 text-lg leading-relaxed overflow-y-auto max-h-[60vh] pr-2">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 1 }}
+                className="space-y-6 text-xl leading-relaxed overflow-y-auto max-h-[60vh] pr-4 font-light italic"
+              >
                 <p>
                   Gặp được em là điều may mắn nhất trong cuộc đời anh. Cảm ơn
                   em đã luôn bao dung, lo lắng và ở bên cạnh anh những lúc vui
@@ -216,13 +314,20 @@ export default function BirthdaySurprise() {
                   ước mơ của mình. Đừng lo lắng gì cả vì lúc nào cũng có anh ở
                   phía sau làm chỗ dựa cho em.
                 </p>
-                <p>Yêu em nhiều hơn ngày hôm qua! 💕</p>
-                <p className="text-right font-semibold mt-6 italic">
+                <p>Mãi yêu em như ngày đầu! 💕</p>
+                <p className="text-right font-semibold mt-10 text-2xl text-rose-500 font-title">
                   - Chàng trai của em -
                 </p>
+              </motion.div>
+              
+              {/* Biểu tượng nhỏ cuối thư */}
+              <div className="flex justify-center mt-8 text-rose-200">
+                <SparkleIcon className="w-4 h-4 animate-sparkle" />
+                <SparkleIcon className="w-4 h-4 animate-sparkle [animation-delay:0.5s]" />
+                <SparkleIcon className="w-4 h-4 animate-sparkle" />
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
