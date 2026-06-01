@@ -35,7 +35,7 @@ export default function BirthdaySurprise() {
     window.addEventListener("mousemove", updateMousePosition);
 
     const timeout = setTimeout(() => setShowConfetti(false), 12000);
-    audioRef.current = new Audio("/music.mp3"); // Cần có file music.mp3 trong thư mục public
+    audioRef.current = new Audio("/George_Micheal_-_Careless_Whisper_(mp3.pm).mp3"); // Cần có file music.mp3 trong thư mục public
     audioRef.current.loop = true;
 
     return () => {
