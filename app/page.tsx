@@ -222,7 +222,7 @@ export default function BirthdaySurprise() {
               className="bg-white rounded-3xl overflow-hidden shadow-xl border-4 border-white group relative aspect-[3/4]"
             >
               <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-3" />
-              <div className="absolute inset-0 bg-gradient-to-t from-rose-900/90 via-black/20 to-transparent flex items-end p-6 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+              <div className="absolute inset-0 bg-gradient-to-t from-rose-900/90 via-black/20 to-transparent flex items-end p-6 opacity-100 transition-all duration-500 translate-y-0">
                 <p className="font-title text-3xl text-white italic drop-shadow-md">&quot;{photo.caption}&quot;</p>
               </div>
             </motion.div>
