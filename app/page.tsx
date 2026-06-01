@@ -130,7 +130,7 @@ export default function BirthdaySurprise() {
   const timeline = [
     { date: "26/06/2024", title: "Trú mưa cùng nhau", desc: "Cơn mưa hôm ấy làm hai đứa mình gần nhau hơn.", icon: "☔" },
     { date: "30/05/2025", title: "Chính thức yêu nhau", desc: "Khoảnh khắc em gật đầu là điều ngọt ngào nhất.", icon: "💖" },
-    { date: "30/06/2026", title: "Kỉ niệm 2 năm yêu", desc: "Càng ngày anh càng thương em nhiều hơn.", icon: "💑" },
+    { date: "30/05/2026", title: "Kỉ niệm 2 năm yêu", desc: "Càng ngày anh càng thương em nhiều hơn.", icon: "💑" },
   ];
   const photos = [
     { url: "z7890081776442_dd7205e09121bda20a7074bd9476c823.jpg", caption: "Nụ cười làm tim anh tan chảy" },
